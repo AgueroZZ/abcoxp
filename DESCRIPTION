@@ -1,0 +1,17 @@
+Package: abcoxp
+Title: Implement Approximate Bayesian Inference for Cox Proportional Hazard Model with Partial Likelihood
+Version: 1.0.0
+Author: Ziang Zhang
+Maintainer: Ziang Zhang <aguero.zhang@mail.utoronto.ca>
+Description: This package implements the approximate Bayesian inference method described in the paper "Bayesian Inference for Cox Proportional Hazard Models with Partial Likelihoods, Semi-Parametric Covariate Effects, and Correlated Observations" by Zhang et al. (2022).
+License: GPL (>= 3)
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+Imports: 
+    TMB (>= 1.7.20),
+    aghq,
+    dplyr
+LinkingTo: 
+    TMB

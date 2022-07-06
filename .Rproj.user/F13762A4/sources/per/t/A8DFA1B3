@@ -1,0 +1,26 @@
+{
+    "id": "A8DFA1B3",
+    "path": "~/Documents/abcoxp/R/model_construction.R",
+    "project_path": "R/model_construction.R",
+    "type": "r_source",
+    "hash": "1272566907",
+    "contents": "",
+    "dirty": false,
+    "created": 1657049022060.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "266,0",
+        "scrollLine": "52"
+    },
+    "folds": "21|34|27|0|\n59|57|264|0|\n66|66|112|2|\n113|71|147|2|\n148|71|189|2|\n190|71|220|2|\n",
+    "lastKnownWriteTime": 1657051645,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1657051645578,
+    "read_only": false,
+    "read_only_alternatives": []
+}

@@ -1,0 +1,67 @@
+[
+    {
+        "file": "/Users/ziangzhang/Documents/abcoxp/src/TMB/GammaNLL.hpp",
+        "file_last_write": 1656984255.0,
+        "definitions": []
+    },
+    {
+        "file": "/Users/ziangzhang/Documents/abcoxp/src/TMB/NormalNLL.hpp",
+        "file_last_write": 1656984255.0,
+        "definitions": []
+    },
+    {
+        "file": "/Users/ziangzhang/Documents/abcoxp/src/TMB/abcoxp_TMBExports.cpp",
+        "file_last_write": 1656984255.0,
+        "definitions": [
+            {
+                "usr": "c:@ST>1#T@objective_function@F@operator()#",
+                "kind": 7,
+                "parent_name": "objective_function<Type>",
+                "name": "operator()",
+                "file": "/Users/ziangzhang/Documents/abcoxp/src/TMB/abcoxp_TMBExports.cpp",
+                "line": 14,
+                "column": 32
+            }
+        ]
+    },
+    {
+        "file": "/Users/ziangzhang/Documents/abcoxp/src/TMB/fixed.hpp",
+        "file_last_write": 1657048760.0,
+        "definitions": []
+    },
+    {
+        "file": "/Users/ziangzhang/Documents/abcoxp/src/TMB/fixed_frailty.hpp",
+        "file_last_write": 1656984255.0,
+        "definitions": []
+    },
+    {
+        "file": "/Users/ziangzhang/Documents/abcoxp/src/TMB/fixed_smooth.hpp",
+        "file_last_write": 1657051396.0,
+        "definitions": []
+    },
+    {
+        "file": "/Users/ziangzhang/Documents/abcoxp/src/TMB/fixed_smooth_frailty.hpp",
+        "file_last_write": 1656984255.0,
+        "definitions": []
+    },
+    {
+        "file": "/Users/ziangzhang/Documents/abcoxp/src/TMB/smooth.hpp",
+        "file_last_write": 1656984255.0,
+        "definitions": []
+    },
+    {
+        "file": "/Users/ziangzhang/Documents/abcoxp/src/init_dummy_file.cpp",
+        "file_last_write": 1656984255.0,
+        "definitions": [
+            {
+                "usr": "c:@F@R_init_abcoxp#*$@S@_DllInfo#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "R_init_abcoxp(DllInfo *)",
+                "file": "/Users/ziangzhang/Documents/abcoxp/src/init_dummy_file.cpp",
+                "line": 7,
+                "column": 24
+            }
+        ]
+    }
+]
