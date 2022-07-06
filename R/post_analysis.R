@@ -5,6 +5,7 @@
 #' @param nsamps An integer value of the number of samples.
 #' @return A list that contains the posterior samples.
 #' 
+#' @export
 abcoxp_sampling <- function(fitted_model, nsamps){
   if(length(fitted_model$components$RW2) == 0 & length(fitted_model$components$frailty) == 0){
     beta_samps <- LaplacesDemon::rmvnp(n = nsamps, mu = fitted_model$model$mean, Omega = as.matrix(fitted_model$model$prec))

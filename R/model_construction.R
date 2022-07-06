@@ -56,6 +56,7 @@ RW2_design_comp <- function(x, r){
 #' The default value is diag_noise = 0.0001.
 #' @return A list that contains the fitted AGHQ object of the model and other components.
 #'  
+#' @export 
 abcoxp_fit <- function(data, times, cens, fixed = NULL, frailty = NULL, RW2 = NULL, 
                    fixed_control = list(betaprec = .001), frailty_control = list(alpha = 0.5, u = 1), 
                    RW2_control = list(alpha = 0.5, u = 1, r = 50), 
@@ -221,7 +222,7 @@ abcoxp_fit <- function(data, times, cens, fixed = NULL, frailty = NULL, RW2 = NU
     ff$he <- function(w) numDeriv::jacobian(ff$gr,w)
     opt <- nlminb(start = ff$par, objective = ff$fn, gradient = ff$gr, hessian = ff$he, 
                   control = list(eval.max = 20000, iter.max = 20000))
-    prec_matrix <- forceSymmetric(ff$he(opt$par))
+    prec_matrix <- Matrix::forceSymmetric(ff$he(opt$par))
     return(list(model = list(mean = opt$par, prec = as.matrix(prec_matrix), opt = opt), data = data, X = X, components = list(fixed = fixed, frailty = frailty, RW2 = RW2)))
   }
   else if(length(fixed) == 0 & length(frailty) == 0 & length(RW2) == 1){
