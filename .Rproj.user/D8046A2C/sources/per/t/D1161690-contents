@@ -1,0 +1,286 @@
+### Fit some example dataset with abcoxp
+library(tidyverse)
+library(aghq)
+library(mgcv)
+library(Matrix)
+library(rstan)
+library(TMB)
+library(INLA)
+library(tmbstan)
+library(foreach)
+library(parallel)
+library(foreach)
+library(abcoxp)
+
+K = 20
+beta = 0.2
+sd = 0.8
+M <- 500
+N <- 10
+
+### Simulate some survival data:
+set.seed(1234)
+Simulate_grouped_data <- function(N = 2, bas = "piecewiseconstant", K = 50, beta = 0.2, sdtheta = 0.8){
+  n <- N*K ### Total samples
+  if(bas == "piecewiseconstant") {
+    timelim <- baseline$timelim[1]
+    tdom <- baseline$time
+    haz <- baseline$hazard
+    true <- data.frame(time = tdom, hazard = haz)
+    u <- rnorm(K, sd = sdtheta)
+    u <- rep(u, each = N)
+    x <- rnorm(n, sd = 1)
+    eta <- u + beta*x
+    failtimes <- c()
+    r <- runif(n)
+    for (i in 1:n) {
+      hazz <- haz * exp(eta[i])
+      cumhaz <- cumsum(hazz*0.001)
+      Surv <- exp(-cumhaz)
+      Surv[1] <- 1
+      failtimes[i] <- tdom[colSums(outer(Surv, r[i], `>`))]
+    }
+    data <- data_frame(x = x,times = failtimes, entry = rep(0,length(length(u))),censoring = ifelse(failtimes >= timelim,yes = 0, no=1))
+    for (i in 1:length(data$censoring)) {
+      if (data$censoring[i] == 1) {data$censoring[i] <- rbinom(n = 1,size = 1,prob = 0.9)}
+    }
+    data$group <- rep(1:K, each = N)
+    data$true <- u
+  }
+  else if (bas == "regular") {
+    timelim <- 200
+    tdom <- seq(0, timelim, by = 0.001)
+    haz <- rep(0, length(tdom))
+    haz <- 0.2 * cos(0.15*tdom) + 0.3
+    true <- data.frame(time = tdom, hazard = haz)
+    u <- rnorm(K, sd = sdtheta)
+    u <- rep(u, each = N)
+    x <- rnorm(n, sd = 3)
+    eta <- u + beta*x
+    failtimes <- c()
+    r <- runif(n)
+    for (i in 1:n) {
+      hazz <- haz * exp(eta[i])
+      cumhaz <- cumsum(hazz*0.001)
+      Surv <- exp(-cumhaz)
+      Surv[1] <- 1
+      failtimes[i] <- tdom[colSums(outer(Surv, r[i], `>`))]
+    }
+    data <- data_frame(x = x,times = failtimes, entry = rep(0,length(length(u))),censoring = ifelse(failtimes >= timelim,yes = 0, no=1))
+    for (i in 1:length(data$censoring)) {
+      if (data$censoring[i] == 1) {data$censoring[i] <- rbinom(n = 1,size = 1,prob = 0.9)}
+    }
+    data$group <- rep(1:K, each = N)
+    data$true <- u
+  }
+  else if (bas == "constant") {
+    timelim <- 200
+    tdom <- seq(0, timelim, by = 0.001)
+    haz <- rep(0.05, length(tdom))
+    true <- data.frame(time = tdom, hazard = haz)
+    u <- rnorm(K, sd = sdtheta)
+    u <- rep(u, each = N)
+    x <- rnorm(n, sd = 3)
+    eta <- u + beta*x
+    failtimes <- c()
+    r <- runif(n)
+    for (i in 1:n) {
+      hazz <- haz * exp(eta[i])
+      cumhaz <- cumsum(hazz*0.001)
+      Surv <- exp(-cumhaz)
+      Surv[1] <- 1
+      failtimes[i] <- tdom[colSums(outer(Surv, r[i], `>`))]
+    }
+    data <- data_frame(x = x,times = failtimes, entry = rep(0,length(length(u))),censoring = ifelse(failtimes >= timelim,yes = 0, no=1))
+    for (i in 1:length(data$censoring)) {
+      if (data$censoring[i] == 1) {data$censoring[i] <- rbinom(n = 1,size = 1,prob = 0.9)}
+    }
+    data$group <- rep(1:K, each = N)
+    data$true <- u
+  }
+  else{
+    timelim <- 200
+    tdom <- seq(0, timelim, by = 0.001)
+    haz <- rep(0, length(tdom))
+    cut <- 40
+    for (i in 1:cut) {
+      low <- as.numeric(quantile(tdom,(i-1)/cut))
+      high <- as.numeric(quantile(tdom,(i)/cut))
+      if(i %% 2 == 1){
+        haz[tdom<=high & tdom > low] <- 0.01
+      }
+      else if(i %% 2 == 0){
+        haz[tdom<=high & tdom > low] <- 0.25
+      }
+    }
+    true <- data.frame(time = tdom, hazard = haz)
+    u <- rnorm(K, sd = sdtheta)
+    u <- rep(u, each = N)
+    x <- rnorm(n, sd = 3)
+    eta <- u + beta*x
+    failtimes <- c()
+    r <- runif(n)
+    for (i in 1:n) {
+      hazz <- haz * exp(eta[i])
+      cumhaz <- cumsum(hazz*0.001)
+      Surv <- exp(-cumhaz)
+      Surv[1] <- 1
+      failtimes[i] <- tdom[colSums(outer(Surv, r[i], `>`))] 
+    }
+    data <- data_frame(x = x,times = failtimes, entry = rep(0,length(length(u))),censoring = ifelse(failtimes >= timelim,yes = 0, no=1))
+    for (i in 1:length(data$censoring)) {
+      if (data$censoring[i] == 1) {data$censoring[i] <- rbinom(n = 1,size = 1,prob = 0.9)}
+    }
+    data$group <- rep(1:K, each = N)
+    data$true <- u
+  }
+  data
+}
+data <- Simulate_grouped_data(N = N, bas = "constant", K = K, beta = beta, sdtheta = sd)
+
+
+
+### Fit the abcoxp model
+fitted_model <- abcoxp_fit(data = data, times = "times", frailty = "group", fixed = "x", cens = "censoring")
+### Look at posterior of variance parameter:
+plot(fitted_model$model)
+### Obtain posterior samples
+samps <- abcoxp_sampling(fitted_model, 3000)
+mean(samps$fixed_samps)
+### For frailty
+poster_mean <- as.numeric(apply(samps$frailty_samps,2,mean))
+### Compare with truth
+truth <- unique(data$true)
+
+
+
+#### Consider just the RW2 component:
+Simulate_baseline <- function(timelim = 300, breaks = 0.001, cut = 40){
+  timelim <- timelim
+  tdom <- seq(0, timelim, by = breaks)
+  haz <- rep(0, length(tdom))
+  cut <- cut
+  for (i in 1:cut) {
+    low <- as.numeric(quantile(tdom,(i-1)/cut))
+    high <- as.numeric(quantile(tdom,(i)/cut))
+    if(i %% 2 == 1){
+      a <- runif(1,0,1)
+      if(a > 0.3) haz[tdom<=high & tdom > low] <- 0.1
+      else {
+        c <- tdom[tdom<=high & tdom > low]
+        haz[tdom<=high & tdom > low] <-(0.05) *(c-min(c))
+      }
+    }
+    if(i %% 2 == 0){
+      a <- runif(1,0,1)
+      if(a > 0.8){
+        c <- tdom[tdom<=high & tdom > low]
+        haz[tdom<=high & tdom > low] <- 0.25
+      }
+      else{
+        haz[tdom<=high & tdom > low] <- sample(c(0.05,0.15),size = 1,prob = c(0.5,0.5))
+      }
+    }
+  }
+  baseline <- data.frame(time = tdom, hazard = haz, timelim = timelim)
+}
+Simulate_data_extreme <- function(N = 1000, truth, RW2BINS = 50, baseline){
+  tdom <- baseline$time
+  timelim <- baseline$timelim[1]
+  haz <- baseline$hazard
+  if(truth == "smooth"){
+    u <- runif(N)
+    x <- runif(N,min = 0, max = 6)
+    truefunc <- function(x) log((x + 1)^2) - 1
+    eta <- truefunc(x)
+  }
+  else{
+    u <- runif(N)
+    x <- runif(N,min = -6, max = 6)
+    truefunc <- function(x) 1.5*(sin(0.8*x))
+    eta <- truefunc(x)
+  }
+  failtimes <- c()
+  for (i in 1:N) {
+    hazz <- haz * exp(eta[i])
+    cumhaz <- cumsum(hazz*0.001)
+    Surv <- exp(-cumhaz)
+    failtimes[i] <- tdom[colSums(outer(Surv, u[i], `>`))]
+  }
+  data <- data_frame(x = x,times = failtimes, entry = rep(0,length(length(u))),censoring = ifelse(failtimes >= timelim,yes = 0, no=1))
+  for (i in 1:length(data$censoring)) {
+    if (data$censoring[i] == 1) {data$censoring[i] <- rbinom(n = 1,size = 1,prob = 0.9)}
+  }
+  data <- rename(data,exposure = x)
+  data <- data %>% as_tibble() %>%
+    mutate(exposure_binned = abcoxph:::bin_covariate(exposure,bins = RW2BINS,type = "equal"))
+  data
+}
+baseline <- Simulate_baseline()
+data <- Simulate_data_extreme(baseline = baseline, truth = "smooth", N = 1000)
+
+
+
+### Fit the abcoxp model
+fitted_model <- abcoxp_fit(data = data, times = "times", RW2 = "exposure", cens = "censoring")
+### Look at posterior of variance parameter:
+plot(fitted_model$model)
+### Obtain posterior samples
+samps <- abcoxp_sampling(fitted_model, 3000)
+### Each sample path need to be corrected:
+for (i in 1:(ncol(samps$RW2_values_samps)-1)) {
+  samps$RW2_values_samps[,(i+1)] <- samps$RW2_values_samps[,(i+1)] - mean(samps$RW2_values_samps[,(i+1)])
+}
+mean <- samps$RW2_values_samps[,-1] %>% apply(1,mean)
+upper <- samps$RW2_values_samps[,-1] %>% apply(1,quantile, p = 0.975)
+lower <- samps$RW2_values_samps[,-1] %>% apply(1,quantile, p = 0.025)
+plot(mean~samps$RW2_values_samps$x, type = 'l')
+lines(upper~samps$RW2_values_samps$x, lty = 'dashed')
+lines(lower~samps$RW2_values_samps$x, lty = 'dashed')
+
+truefunc <- function(x) log((x + 1)^2) - 1
+lines((truefunc(samps$RW2_values_samps$x) - mean(truefunc(samps$RW2_values_samps$x)))~samps$RW2_values_samps$x, col = 'red')
+
+
+
+
+### Now consider an example with just fixed effect:
+fitted_model <- abcoxp_fit(data = kidney, times = "time", fixed = c("age", "sex"), cens = "status")
+samps <- abcoxp_sampling(fitted_model, 3000)
+samps$fixed_samps %>% apply(2, mean)
+samps$fixed_samps %>% apply(2, sd)
+
+
+### compare with result from coxph:
+coxph(formula = Surv(time, status)~ age + sex, data = kidney)
+
+
+
+
+
+
+### Finally consider an example with fixed effect, frailty and RW2:
+fitted_model <- abcoxp_fit(data = Leuk, times = "time", fixed = c("age", "wbc", "sex"),
+                           RW2 = "tpi", cens = "cens", frailty = "district",
+                           RW2_control = list(alpha = 0.5, u = 2, r = 30),
+                           diag_noise = 0.0001)
+plot(fitted_model$model)
+samps <- abcoxp_sampling(fitted_model, 3000)
+### Obtain posterior samples
+samps <- abcoxp_sampling(fitted_model, 3000)
+### Each sample path need to be corrected:
+mean <- samps$RW2_values_samps[,-1] %>% apply(1,mean)
+upper <- samps$RW2_values_samps[,-1] %>% apply(1,quantile, p = 0.975)
+lower <- samps$RW2_values_samps[,-1] %>% apply(1,quantile, p = 0.025)
+plot(mean~samps$RW2_values_samps$x, type = 'l', ylim = c(-0.6,0.3))
+lines(upper~samps$RW2_values_samps$x, lty = 'dashed')
+lines(lower~samps$RW2_values_samps$x, lty = 'dashed')
+### Fixed effect
+samps$fixed_samps %>% apply(2, mean)
+samps$fixed_samps %>% apply(2, sd)
+
+
+
+
+
+

@@ -2,7 +2,7 @@
 #' Proportional Hazard Model with Analysis of Posterior.
 #' 
 #' @param fitted_model A list from the output of `abcoxp_fit`.
-#' @param n_samps An integer value of the number of samples.
+#' @param nsamps An integer value of the number of samples.
 #' @return A list that contains the posterior samples.
 #' 
 abcoxp_sampling <- function(fitted_model, nsamps){
@@ -24,12 +24,14 @@ abcoxp_sampling <- function(fitted_model, nsamps){
       RW2_values_samps <- as.data.frame(as.matrix(RW2_values_samps))
       RW2_values_samps <- dplyr::distinct(dplyr::arrange(RW2_values_samps, by = x), x, 
                                           .keep_all = TRUE)
+      RW2_values_samps <- cbind(RW2_values_samps[,1,drop = F], as.data.frame(sweep(RW2_values_samps[,-1], MARGIN = 2, STATS = colMeans(RW2_values_samps[,-1]))))
+      
       beta_samps <- t(all_samps$samps[-c(1:(K1+K2)),,drop=FALSE])
       colnames(beta_samps) <- c(fitted_model$components$fixed)
       return(list(fixed_samps = beta_samps, frailty_samps = frailty_samps, 
                   RW2_values_samps = RW2_values_samps, RW2_weights_samps = RW2_weights_samps,
-                  frailty_SD = sqrt(1/exp(all_samps$theta1)),
-                  RW2_SD = sqrt(1/exp(all_samps$theta2))))
+                  frailty_SD = sqrt(1/exp(all_samps$theta[,1])),
+                  RW2_SD = sqrt(1/exp(all_samps$theta[,2]))))
       
     }
     else if(length(fitted_model$components$RW2)== 0 & length(fitted_model$components$frailty) == 1){
@@ -52,6 +54,8 @@ abcoxp_sampling <- function(fitted_model, nsamps){
       RW2_values_samps <- as.data.frame(as.matrix(RW2_values_samps))
       RW2_values_samps <- dplyr::distinct(dplyr::arrange(RW2_values_samps, by = x), x, 
                                           .keep_all = TRUE)
+      RW2_values_samps <- cbind(RW2_values_samps[,1,drop = F], as.data.frame(sweep(RW2_values_samps[,-1], MARGIN = 2, STATS = colMeans(RW2_values_samps[,-1]))))
+      
       beta_samps <- t(all_samps$samps[-c(1:(K1+K2)),,drop=FALSE])
       colnames(beta_samps) <- c(fitted_model$components$fixed)
       return(list(fixed_samps = beta_samps, 

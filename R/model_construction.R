@@ -14,6 +14,7 @@ RW2_prec_comp <- function(x, r, diag_noise){
   as(fda::inprod.bspline(fdobj1 = bfd, fdobj2 = bfd, nderiv1 = 2, nderiv2 = 2) + diag(diag_noise, ncol = r, nrow = r),"dgTMatrix")
 }
 
+
 #' Compute the design matrix of the RW2 part:
 #' 
 #' @param x A vector of covariate values.
@@ -48,16 +49,17 @@ RW2_design_comp <- function(x, r){
 #' @param frailty_control A list that specifies the PC prior for the frailty SD
 #' parameters. Default being list(alpha = 0.5, u = 1)
 #' @param RW2_control A list that specifies the PC prior for the RW2 SD
-#' parameters and number of knots used, also the size
-#' of the diagonal adjustment. Default being list(alpha = 0.5, u = 1, r = 50,diag_noise = 0.0001)
+#' parameters and number of knots used. Default being list(alpha = 0.5, u = 1, r = 50)
 #' @param Inference_control A list that specifies the setting of the AGHQ inference, including
 #' the number of grid points K. Default being list(aghq_k = 4).
+#' @param diag_noise The small amount of diagonal adjustment to add when RW2 exists in the model.
+#' The default value is diag_noise = 0.0001.
 #' @return A list that contains the fitted AGHQ object of the model and other components.
 #'  
 abcoxp_fit <- function(data, times, cens, fixed = NULL, frailty = NULL, RW2 = NULL, 
                    fixed_control = list(betaprec = .001), frailty_control = list(alpha = 0.5, u = 1), 
-                   RW2_control = list(alpha = 0.5, u = 1, r = 50, diag_noise = 0.0001), 
-                   Inference_control = list(aghq_k = 4)){
+                   RW2_control = list(alpha = 0.5, u = 1, r = 50), 
+                   Inference_control = list(aghq_k = 4), diag_noise = 0.0001){
   data <- cbind(data[times], data[cens], data[fixed], data[frailty], data[RW2])
   colnames(data) <- c("times", "cens", fixed, frailty, RW2)
   data <- dplyr::arrange(data, by = times)
@@ -72,7 +74,7 @@ abcoxp_fit <- function(data, times, cens, fixed = NULL, frailty = NULL, RW2 = NU
     B1 <- Matrix::Diagonal(n = n)[match(u1,unique(u1)),order(unique(u1))]
     u2 <- as.numeric(data[RW2][,1])
     B2 <- RW2_design_comp(x = u2, r = RW2_control$r)
-    P2 <- RW2_prec_comp(x = u2, r = RW2_control$r, diag_noise = RW2_control$diag_noise)
+    P2 <- RW2_prec_comp(x = u2, r = RW2_control$r, diag_noise = diag_noise)
     tmbdat <- list(
       # Design matrix
       X = X,
@@ -83,7 +85,7 @@ abcoxp_fit <- function(data, times, cens, fixed = NULL, frailty = NULL, RW2 = NU
       # Differencing matrix
       D = D,
       # Log determinant of penalty matrix (without the sigma part)
-      logP2det = as.numeric(determinant(P2,logarithm = TRUE)$modulus),
+      logP2det = as.numeric(Matrix::determinant(P2,logarithm = TRUE)$modulus),
       # Response
       ranks = as.integer(data$ranks),
       cens = as.integer(data$cens),
@@ -154,7 +156,7 @@ abcoxp_fit <- function(data, times, cens, fixed = NULL, frailty = NULL, RW2 = NU
     X <- as(as.matrix(data[fixed]), "dgTMatrix")
     u2 <- as.numeric(data[RW2][,1])
     B2 <- RW2_design_comp(x = u2, r = RW2_control$r)
-    P2 <- RW2_prec_comp(x = u2, r = RW2_control$r, diag_noise = RW2_control$diag_noise)
+    P2 <- RW2_prec_comp(x = u2, r = RW2_control$r, diag_noise = diag_noise)
     tmbdat <- list(
       # Design matrix
       X = X,
@@ -164,7 +166,7 @@ abcoxp_fit <- function(data, times, cens, fixed = NULL, frailty = NULL, RW2 = NU
       # Differencing matrix
       D = D,
       # Log determinant of penalty matrix (without the sigma part)
-      logP2det = as.numeric(determinant(P2,logarithm = TRUE)$modulus),
+      logP2det = as.numeric(Matrix::determinant(P2,logarithm = TRUE)$modulus),
       # Response
       ranks = as.integer(data$ranks),
       cens = as.integer(data$cens),
@@ -227,7 +229,7 @@ abcoxp_fit <- function(data, times, cens, fixed = NULL, frailty = NULL, RW2 = NU
     ## Create P2 precision
     u2 <- as.numeric(data[RW2][,1])
     B2 <- RW2_design_comp(x = u2, r = RW2_control$r)
-    P2 <- RW2_prec_comp(x = u2, r = RW2_control$r, diag_noise = RW2_control$diag_noise)
+    P2 <- RW2_prec_comp(x = u2, r = RW2_control$r, diag_noise = diag_noise)
     tmbdat <- list(
       # Design matrix
       B2 = B2,
@@ -236,7 +238,7 @@ abcoxp_fit <- function(data, times, cens, fixed = NULL, frailty = NULL, RW2 = NU
       # Differencing matrix
       D = D,
       # Log determinant of penalty matrix (without the sigma part)
-      logP2det = as.numeric(determinant(P2,logarithm = TRUE)$modulus),
+      logP2det = as.numeric(Matrix::determinant(P2,logarithm = TRUE)$modulus),
       # Response
       ranks = as.integer(data$ranks),
       cens = as.integer(data$cens),
@@ -257,7 +259,6 @@ abcoxp_fit <- function(data, times, cens, fixed = NULL, frailty = NULL, RW2 = NU
     )
     # Hessian not implemented for RE models
     ff$he <- function(w) numDeriv::jacobian(ff$gr,w)
-    return(ff)
     # AGHQ
     quad <- aghq::marginal_laplace_tmb(ff, k = Inference_control$aghq_k, c(0))
     return(list(model = quad, data = data, B2 = B2, components = list(fixed = fixed, frailty = frailty, RW2 = RW2)))

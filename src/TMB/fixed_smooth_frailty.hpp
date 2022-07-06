@@ -28,7 +28,7 @@ Type fixed_smooth_frailty(objective_function<Type>* obj)
   DATA_SCALAR(alpha1); // pc prior, alpha param
   DATA_SCALAR(u2); // pc prior, u param
   DATA_SCALAR(alpha2); // pc prior, alpha param
-
+  DATA_SCALAR(logP2det); // Determinant of (fixed) penalty matrix
   DATA_SCALAR(betaprec); // beta ~iid N(0,1/betaprec)
   
   // Parameter
@@ -84,15 +84,16 @@ Type fixed_smooth_frailty(objective_function<Type>* obj)
   // Cross product
   Type U1U1 = (U1 * U1).sum();
   lpW += -0.5 * exp(theta1) * U1U1; // U part
-  Type U2U2 = (U2 * U2).sum();
-  lpW += -0.5 * exp(theta2) * U2U2; // U part
+  vector<Type> P2U2 = P2*U2;
+  Type U2P2U2 = (U2 * P2U2).sum();
+  lpW += -0.5 * exp(theta2) * U2P2U2; // U part
   Type bb = (beta * beta).sum();
   lpW += -0.5 * betaprec * bb; // Beta part
   
   // Log determinant
   Type logdet1 = K1 * theta1;
   lpW += 0.5 * logdet1; // frailty part
-  Type logdet2 = K2 * theta2;
+  Type logdet2 = K2 * theta2 + logP2det;
   lpW += 0.5 * logdet2; // IWP part
   Type logdet3 = betadim * log(betaprec);
   lpW += 0.5 * logdet3; // beta part

@@ -1,0 +1,57 @@
+[
+    {
+        "file": "D:/Coxph Research/abcoxp/src/TMB/GammaNLL.hpp",
+        "file_last_write": 1657074333.0,
+        "definitions": []
+    },
+    {
+        "file": "D:/Coxph Research/abcoxp/src/TMB/NormalNLL.hpp",
+        "file_last_write": 1657074333.0,
+        "definitions": []
+    },
+    {
+        "file": "D:/Coxph Research/abcoxp/src/TMB/abcoxp_TMBExports.cpp",
+        "file_last_write": 1657074333.0,
+        "definitions": []
+    },
+    {
+        "file": "D:/Coxph Research/abcoxp/src/TMB/fixed.hpp",
+        "file_last_write": 1657074333.0,
+        "definitions": []
+    },
+    {
+        "file": "D:/Coxph Research/abcoxp/src/TMB/fixed_frailty.hpp",
+        "file_last_write": 1657074333.0,
+        "definitions": []
+    },
+    {
+        "file": "D:/Coxph Research/abcoxp/src/TMB/fixed_smooth.hpp",
+        "file_last_write": 1657074333.0,
+        "definitions": []
+    },
+    {
+        "file": "D:/Coxph Research/abcoxp/src/TMB/fixed_smooth_frailty.hpp",
+        "file_last_write": 1657126143.0,
+        "definitions": []
+    },
+    {
+        "file": "D:/Coxph Research/abcoxp/src/TMB/smooth.hpp",
+        "file_last_write": 1657074333.0,
+        "definitions": []
+    },
+    {
+        "file": "D:/Coxph Research/abcoxp/src/init_dummy_file.cpp",
+        "file_last_write": 1657074333.0,
+        "definitions": [
+            {
+                "usr": "c:@F@R_init_abcoxp#*$@S@_DllInfo#",
+                "kind": 6,
+                "parent_name": "",
+                "name": "R_init_abcoxp(DllInfo *)",
+                "file": "D:/Coxph Research/abcoxp/src/init_dummy_file.cpp",
+                "line": 7,
+                "column": 24
+            }
+        ]
+    }
+]
